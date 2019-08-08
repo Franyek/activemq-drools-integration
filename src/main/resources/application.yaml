@@ -1,0 +1,13 @@
+server:
+  port: 8090
+activemq:
+  broker:
+    user: ${MQ_USER}
+    password: ${MQ_PASSWORD}
+    url: ${MQ_URL}
+  queue:
+    name: ${MQ_QUEUE}
+
+spring:
+  activemq:
+    in-memory: false

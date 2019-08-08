@@ -1,0 +1,14 @@
+package hello
+
+declare Driver
+    age : Integer
+    priorClaims : Integer = new Integer(0)
+    locationRiskProfile : String = "LOW"
+end
+
+declare Policy
+    type : String = "COMPREHENSIVE";
+    approved : boolean = false;
+    discountPercent : int = 0;
+    basePrice : int;
+end
