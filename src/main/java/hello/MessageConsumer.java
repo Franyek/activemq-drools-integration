@@ -10,6 +10,8 @@ import org.kie.api.event.rule.DebugAgendaEventListener;
 import org.kie.api.event.rule.DebugRuleRuntimeEventListener;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.StatelessKieSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
@@ -21,6 +23,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Component
 public class MessageConsumer {
+
+    private static Logger log = LoggerFactory.getLogger(MessageConsumer.class);
 
     @Autowired
     private KieContainer kc;
@@ -40,10 +44,13 @@ public class MessageConsumer {
         JSONArray jsonArray = new JSONArray(message);
         System.out.println(message);
 
-        doExecute(jsonArray);
+        List<Object> facts = doExecute(jsonArray);
+        for (Object o : facts){
+            System.out.println(o);
+        }
     }
 
-    private JSONArray doExecute(JSONArray factNodes) throws JSONException {
+    private List<Object> doExecute(JSONArray factNodes) throws JSONException {
 
         StatelessKieSession ksession = kc.newStatelessKieSession();
 
@@ -73,15 +80,7 @@ public class MessageConsumer {
         }
 
         ksession.execute(facts);
-//        ArrayNode outputJson = mapper.createArrayNode();
-//        JsonNodeFactory nodeFactory = mapper.getNodeFactory();
-//        for (Object fact : facts) {
-//            ObjectNode node = mapper.convertValue(fact, ObjectNode.class);
-//            node.set("_type", nodeFactory.textNode(fact.getClass().getName()));
-//            outputJson.add(node);
-//        }
-//        return outputJson;
-        return null;
+        return facts;
     }
 
     private TypeName extractTypeName(String type) {
