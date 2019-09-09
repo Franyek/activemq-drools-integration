@@ -1,14 +1,11 @@
 package hello
 
-declare Driver
-    age : Integer
-    priorClaims : Integer = new Integer(0)
-    locationRiskProfile : String = "LOW"
-end
+import hello.Driver
 
-declare Policy
-    type : String = "COMPREHENSIVE";
-    approved : boolean = false;
-    discountPercent : int = 0;
-    basePrice : int;
+rule "Driver age"
+dialect "mvel"
+when
+    driver : Driver( age >= 30)
+then
+    System.out.println("Driver is old");
 end

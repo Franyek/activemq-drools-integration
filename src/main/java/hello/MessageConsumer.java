@@ -5,7 +5,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.kie.api.KieBase;
-import org.kie.api.definition.type.FactType;
 import org.kie.api.event.rule.DebugAgendaEventListener;
 import org.kie.api.event.rule.DebugRuleRuntimeEventListener;
 import org.kie.api.runtime.KieContainer;
@@ -16,7 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -39,18 +41,18 @@ public class MessageConsumer {
         }
     }
 
-    @JmsListener(destination = "${activemq.queue.name}")
-    public void receive(String message) throws JSONException {
+    @JmsListener(destination = "${activemq.queue.name}", containerFactory = "myFactory")
+    public void receive(String message) throws JSONException, InvocationTargetException, NoSuchMethodException, ClassNotFoundException, InstantiationException, IllegalAccessException {
+        log.info(message);
         JSONArray jsonArray = new JSONArray(message);
-        System.out.println(message);
 
         List<Object> facts = doExecute(jsonArray);
         for (Object o : facts){
-            System.out.println(o);
+            log.info(o.toString());
         }
     }
 
-    private List<Object> doExecute(JSONArray factNodes) throws JSONException {
+    private List<Object> doExecute(JSONArray factNodes) throws IllegalAccessException, InvocationTargetException, InstantiationException, NoSuchMethodException, ClassNotFoundException, JSONException {
 
         StatelessKieSession ksession = kc.newStatelessKieSession();
 
@@ -67,16 +69,21 @@ public class MessageConsumer {
             checkNotNull(typeNode, "Missing _type information");
             node.remove("_type");
 
-            TypeName typeName = extractTypeName(typeNode);
-            FactType factType = kb.getFactType(typeName.packageName, typeName.typeName);
-            checkNotNull(factType, "Unknown input type %s", typeName);
+//            TypeName typeName = extractTypeName(typeNode);
+//            FactType factType = kb.getFactType(typeName.packageName, typeName.typeName);
+//            checkNotNull(factType, "Unknown input type %s", typeName);
+//
+//            Class<?> factClass = factType.getFactClass();
+//
+//            Gson gson = new Gson();
+//            Object inputFact = gson.fromJson(node.toString(), factClass);
 
-            Class<?> factClass = factType.getFactClass();
+            HashMap<String,Object> result = new Gson().fromJson(node.toString(), HashMap.class);
+            Class inputClass = Class.forName(typeNode);
+            Constructor<?> cons = inputClass.getConstructor(HashMap.class);
+            Object o = cons.newInstance(result);
 
-            Gson gson = new Gson();
-            Object inputFact = gson.fromJson(node.toString(), factClass);
-
-            facts.add(inputFact);
+            facts.add(o);
         }
 
         ksession.execute(facts);
