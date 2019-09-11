@@ -29,7 +29,7 @@ public class MessageConsumer {
     private static Logger log = LoggerFactory.getLogger(MessageConsumer.class);
 
     @Autowired
-    private KieContainer kc;
+    public static KieContainer kc;
 
     static class TypeName {
         public String packageName;
@@ -61,6 +61,7 @@ public class MessageConsumer {
 
         KieBase kb = kc.getKieBase();
 
+
         List<Object> facts = new ArrayList<>();
         for (int i = 0; i < factNodes.length(); i++) {
             JSONObject node = factNodes.getJSONObject(i);
@@ -82,7 +83,6 @@ public class MessageConsumer {
             Class inputClass = Class.forName(typeNode);
             Constructor<?> cons = inputClass.getConstructor(HashMap.class);
             Object o = cons.newInstance(result);
-
             facts.add(o);
         }
 
